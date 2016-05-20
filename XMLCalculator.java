@@ -39,6 +39,8 @@ public class XMLCalculator {
      * @throws SAXException
      */
     public static void main(String[] args) throws ParserConfigurationException, IOException, SAXException {
+
+        //get filenames for file to parse and for schema
         String fileToParseName = "";
         String schemaFileName = "";
         try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
@@ -50,15 +52,24 @@ public class XMLCalculator {
             System.out.println(e.getMessage() + " enter proper file name!");
         }
 
+        //get Schema object
         Schema schema = getXMLSchemaFile(schemaFileName);
+
+        //get File representation of XML file
         xmlToParse = getXMLFile(fileToParseName);
+
+        //parse XML file to DOM
         Document doc = parseXMLFile(xmlToParse);
+
+        //validate XML file according to given schema
         validate(schema, doc);
 
-        System.out.println(doc.getDocumentURI());
+        //System.out.println(doc.getDocumentURI());
 
+        //get nodes and calculate result of expressions
         getNodesAndCalculate(doc);
 
+        //write result to XML file
         writeToXMLFile();
 
     }
@@ -92,7 +103,7 @@ public class XMLCalculator {
     }
 
     /**
-     * Parse XML file
+     * Parse XML
      * @param xmlToParse  File object of XML file to parse
      * @return Document object
      */
@@ -137,46 +148,57 @@ public class XMLCalculator {
      */
     public static void getNodesAndCalculate (Document doc) {
         // Get Node object for "SimpleCalculator"
-        Node simpleCalc = doc.getChildNodes().item(0);  //Костыль и магическое число! М.б. текст вместо узла
+        Node simpleCalc = doc.getChildNodes().item(0);  //workaround and magic number! May be #text instead of element
 
         // Get Node object for "expressions"
-        Node expressions = simpleCalc.getChildNodes().item(1);
+        Node expressions = simpleCalc.getChildNodes().item(1);  //workaround and magic number! May be #text instead of element
 
         // Get children of "expressions"
         NodeList expressionsChildren = expressions.getChildNodes();
 
-        //System.out.println(expressionsChildren.getLength());
+        int expNum = 0; //counter of expressions
+        // Get "expression" nodes, "operation" nodes and calculate result
         for (int i = 0; i < expressionsChildren.getLength(); i++) {
             Node node = expressionsChildren.item(i);
             if (node.getNodeName().equals("expression")) {
-                Node operation1 = node.getChildNodes().item(1);     //Костыль и магическое число!
+                ++expNum;
+                Node operation1 = node.getChildNodes().item(1);     //workaround and magic number!
                 if (operation1.getNodeName().equals("operation"))
-                    System.out.println("Result of " + i + " expression is: " + operation(operation1));
+                    System.out.println("Result of " + expNum + " expression is: " + operation(operation1));
             }
         }
     }
 
     /**
-     *
+     * Processing of "operation" node and calculating result
      * @param parent
      * @return
      */
-    public static int operation(Node parent) {
+    public static double operation(Node parent) {
 
-        int result = 0; //!!!
+        double result = 0; //!!!
 
         NodeList children = parent.getChildNodes();
 
         //store for arguments to calculate
-        List<Integer> list = new ArrayList<>();
+        List<Double> list = new ArrayList<>();
 
-        if (children.item(1).getNodeName().equals("arg")) {   //check end of recursion
+        //check end of recursion.
+        boolean argFlag = false;
+        for (int i = 0; i < children.getLength(); i++) {
+            if (children.item(1).getNodeName().equals("arg")) {
+                argFlag = true;
+                break;
+            }
+        }
+
+        if (argFlag) {
             for (int i = 0; i < children.getLength(); i++) {
                 Node argument = children.item(i);
                 String s = argument.getTextContent();
                 //System.out.println("Проблема: " + s);
                 try {
-                    list.add(Integer.parseInt(s));  //Bad String
+                    list.add((double) Integer.parseInt(s));  //incorrect String may occur
                 } catch (Exception e) {
 
                 }
@@ -196,24 +218,25 @@ public class XMLCalculator {
         //do mathematical operations with arguments from list
         switch (mathOpName) {
             case "SUB":
-                for (Integer i: list)
+                for (Double i: list)
                     result -= i;
                 break;
             case "SUM":
-                for (Integer i: list)
+                for (Double i: list)
                     result += i;
                 break;
             case "MUL":
-                for (Integer i: list)
+                for (Double i: list)
                     result *= i;
                 break;
             case "DIV":
-                for (Integer i: list)
+                for (Double i: list)
                     result /= i;
                 break;
             default:
                 throw new IllegalArgumentException("Incorrect mathematical operation type!");
         }
+        System.out.println(result);
         return result;
     }
 
