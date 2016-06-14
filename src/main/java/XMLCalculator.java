@@ -24,6 +24,8 @@ import java.util.List;
  * Test files:
  * C:\Lanrette\Java\XMLCalculator\sampleTest2.xml
  * C:\Lanrette\Java\XMLCalculator\Calculator.xsd
+ * /media/alex/01D1BD524AB68AA0/Lanrette/Java/XMLCalculator/sampleTest2.xml
+ * /media/alex/01D1BD524AB68AA0/Lanrette/Java/XMLCalculator/Calculator.xsd
  */
 public class XMLCalculator {
     /**
